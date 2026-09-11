@@ -1,7 +1,7 @@
 """Меню заданий лабораторной работы."""
 from collections.abc import Callable
 
-from structlab import gcd, recursive_sum, squares
+from structlab import gcd, guess_game, recursive_sum, squares
 from structlab.calculator import cli as calculator_cli
 from structlab.console import InputFunc, OutputFunc, read_line
 
@@ -15,6 +15,7 @@ MENU_ITEMS: tuple[tuple[str, TaskRunner], ...] = (
     ("НОД двух чисел", gcd.run),
     ("Калькулятор", calculator_cli.run),
     ("Словарь квадратов чисел", squares.run),
+    ("Игра «Угадай число»", guess_game.run),
     ("Рекурсивная сумма чисел", recursive_sum.run),
 )
 
