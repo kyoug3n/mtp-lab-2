@@ -17,10 +17,13 @@ def gcd(a: int, b: int) -> int:
     логарифм меньшего из чисел (теорема Ламе), поэтому функция быстро
     работает и с очень большими целыми числами.
 
-    :raises TypeError: если аргументы не целые числа.
+    :raises TypeError: если аргументы не целые числа. ``bool`` в Python —
+        подкласс ``int`` (``math.gcd(True, 6)`` вернёт 1), но здесь
+        логические значения тоже отклоняются как не числа.
     """
-    if not isinstance(a, int) or not isinstance(b, int):
-        raise TypeError("НОД определён только для целых чисел")
+    for value in (a, b):
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError("НОД определён только для целых чисел")
     a, b = abs(a), abs(b)
     while b != 0:
         a, b = b, a % b

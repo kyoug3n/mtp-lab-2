@@ -46,8 +46,10 @@ class GcdTests(unittest.TestCase):
             self.assertEqual(gcd(a, b), math.gcd(a, b), msg=f"{a}, {b}")
 
     def test_rejects_non_integers(self) -> None:
-        with self.assertRaises(TypeError):
-            gcd(4.0, 6)  # type: ignore[arg-type]
+        for a, b in ((4.0, 6), (4, "6"), (True, 6), (6, False)):
+            with self.subTest(a=a, b=b):
+                with self.assertRaises(TypeError):
+                    gcd(a, b)  # type: ignore[arg-type]
 
 
 class GcdDialogTests(unittest.TestCase):
