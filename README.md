@@ -96,7 +96,9 @@ python -m structlab.demo reports/demo.txt   # пересоздать прото�
 В начале [`reports/demo.txt`](reports/demo.txt) записаны команда, ревизия и версия Python,
 на которых он получен. Тест `test_committed_report_is_up_to_date` сравнивает сессии
 из файла со свежим прогоном, так что протокол в репозитории не может незаметно
-разойтись с кодом.
+разойтись с кодом. Протокол и выводы проверок в этом README обновлены последним
+коммитом: в штампе указана ревизия `70dc5f9`, после которой изменены только
+`reports/demo.txt` и `README.md` (проверка: `git log --stat 70dc5f9..main`).
 
 ## 1. НОД двух чисел (средняя №4)
 
@@ -637,7 +639,7 @@ test_unknown_character (tests.test_tokenizer.TokenizeTests.test_unknown_characte
 test_unknown_names (tests.test_tokenizer.TokenizeTests.test_unknown_names) ... ok
 
 ----------------------------------------------------------------------
-Ran 95 tests in 0.914s
+Ran 95 tests in 0.838s
 
 OK
 ```
