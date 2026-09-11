@@ -29,8 +29,8 @@
 
 | Уровень | № | Задание | Раздел | Код | Тесты | Коммиты |
 |---|---|---|---|---|---|---|
-| Средний | 4 | НОД двух чисел | [1](#1-нод-двух-чисел-средняя-4) | [`structlab/gcd.py`](structlab/gcd.py) | [`tests/test_gcd.py`](tests/test_gcd.py) | `58535ba` |
-| Средний | 6 | Калькулятор | [2](#2-калькулятор-средняя-6) | [`structlab/calculator/`](structlab/calculator) | [`test_tokenizer.py`](tests/test_tokenizer.py), [`test_evaluate.py`](tests/test_evaluate.py), [`test_calculator_cli.py`](tests/test_calculator_cli.py) | `79126d4`, `ac8c2ab`, `c16aeae`, `e671586` |
+| Средний | 4 | НОД двух чисел | [1](#1-нод-двух-чисел-средняя-4) | [`structlab/gcd.py`](structlab/gcd.py) | [`tests/test_gcd.py`](tests/test_gcd.py) | `58535ba`, `704daca` |
+| Средний | 6 | Калькулятор | [2](#2-калькулятор-средняя-6) | [`structlab/calculator/`](structlab/calculator) | [`test_tokenizer.py`](tests/test_tokenizer.py), [`test_evaluate.py`](tests/test_evaluate.py), [`test_calculator_cli.py`](tests/test_calculator_cli.py) | `79126d4`, `ac8c2ab`, `c16aeae`, `e671586`, `9cac734` |
 | Средний | 10 | Словарь квадратов чисел | [3](#3-словарь-квадратов-чисел-средняя-10) | [`structlab/squares.py`](structlab/squares.py) | [`tests/test_squares.py`](tests/test_squares.py) | `a6e6e7d` |
 | Повышенный | 5 | Игра «Угадай число» | [4](#4-игра-угадай-число-повышенная-5) | [`structlab/guess_game.py`](structlab/guess_game.py) | [`tests/test_guess_game.py`](tests/test_guess_game.py) | `b13c60d` |
 | Повышенный | 9 | Рекурсивная сумма чисел | [5](#5-рекурсивная-сумма-чисел-повышенная-9) | [`structlab/recursive_sum.py`](structlab/recursive_sum.py) | [`tests/test_recursive_sum.py`](tests/test_recursive_sum.py) | `6b94d70`, `1f459e9` |
@@ -97,8 +97,8 @@ python -m structlab.demo reports/demo.txt   # пересоздать прото�
 на которых он получен. Тест `test_committed_report_is_up_to_date` сравнивает сессии
 из файла со свежим прогоном, так что протокол в репозитории не может незаметно
 разойтись с кодом. Протокол и выводы проверок в этом README обновлены последним
-коммитом: в штампе указана ревизия `70dc5f9`, после которой изменены только
-`reports/demo.txt` и `README.md` (проверка: `git log --stat 70dc5f9..main`).
+коммитом: в штампе указана ревизия `704daca`, после которой изменены только
+`reports/demo.txt` и `README.md` (проверка: `git log --stat 704daca..main`).
 
 ## 1. НОД двух чисел (средняя №4)
 
@@ -539,7 +539,7 @@ $ echo $?
 0
 ```
 
-Тесты: `python -m unittest -v` — 95 тестов, все проходят.
+Тесты: `python -m unittest -v` — 96 тестов, все проходят.
 
 <details>
 <summary>Полный вывод <code>python -m unittest -v</code></summary>
@@ -567,6 +567,7 @@ test_float_overflow (tests.test_evaluate.ErrorTests.test_float_overflow) ... ok
 test_huge_integer_powers_are_refused_quickly (tests.test_evaluate.ErrorTests.test_huge_integer_powers_are_refused_quickly) ... ok
 test_integer_digit_limit (tests.test_evaluate.ErrorTests.test_integer_digit_limit) ... ok
 test_integer_operations_with_complex_numbers (tests.test_evaluate.ErrorTests.test_integer_operations_with_complex_numbers) ... ok
+test_missing_operator (tests.test_evaluate.ErrorTests.test_missing_operator) ... ok
 test_sqrt_errors (tests.test_evaluate.ErrorTests.test_sqrt_errors) ... ok
 test_syntax_errors (tests.test_evaluate.ErrorTests.test_syntax_errors) ... ok
 test_too_deep_nesting (tests.test_evaluate.ErrorTests.test_too_deep_nesting) ... ok
@@ -644,7 +645,7 @@ test_unknown_character (tests.test_tokenizer.TokenizeTests.test_unknown_characte
 test_unknown_names (tests.test_tokenizer.TokenizeTests.test_unknown_names) ... ok
 
 ----------------------------------------------------------------------
-Ran 95 tests in 0.838s
+Ran 96 tests in 0.801s
 
 OK
 ```
