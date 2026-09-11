@@ -2,6 +2,7 @@
 from collections.abc import Callable
 
 from structlab import gcd, recursive_sum, squares
+from structlab.calculator import cli as calculator_cli
 from structlab.console import InputFunc, OutputFunc, read_line
 
 TaskRunner = Callable[[InputFunc, OutputFunc], None]
@@ -9,8 +10,10 @@ TaskRunner = Callable[[InputFunc, OutputFunc], None]
 TITLE = "Лабораторная работа №2 «Структурное программирование на Python»"
 
 # Пункты меню: название задания и функция, запускающая его диалог.
+# Порядок — как в варианте: Средн. 4, 6, 10, Повыш. 5, 9.
 MENU_ITEMS: tuple[tuple[str, TaskRunner], ...] = (
     ("НОД двух чисел", gcd.run),
+    ("Калькулятор", calculator_cli.run),
     ("Словарь квадратов чисел", squares.run),
     ("Рекурсивная сумма чисел", recursive_sum.run),
 )

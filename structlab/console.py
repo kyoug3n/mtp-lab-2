@@ -14,8 +14,8 @@ OutputFunc = Callable[[str], None]
 EXIT_WORD = "выход"
 
 
-def read_line(prompt: str, input_func: InputFunc = input) -> str | None:
-    """Прочитать строку и убрать пробелы по краям.
+def read_raw_line(prompt: str, input_func: InputFunc = input) -> str | None:
+    """Прочитать строку как есть, не убирая пробелы.
 
     Возвращает ``None``, если ввод закончился (Ctrl+Z или Ctrl+D, Ctrl+C)
     или введено слово «выход» в любом регистре.
@@ -24,10 +24,17 @@ def read_line(prompt: str, input_func: InputFunc = input) -> str | None:
         text = input_func(prompt)
     except (EOFError, KeyboardInterrupt):
         return None
-    text = text.strip()
-    if text.lower() == EXIT_WORD:
+    if text.strip().lower() == EXIT_WORD:
         return None
     return text
+
+
+def read_line(prompt: str, input_func: InputFunc = input) -> str | None:
+    """Прочитать строку без пробелов по краям (см. :func:`read_raw_line`)."""
+    text = read_raw_line(prompt, input_func)
+    if text is None:
+        return None
+    return text.strip()
 
 
 def read_int(
