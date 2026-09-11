@@ -90,6 +90,7 @@ class PrecedenceTests(unittest.TestCase):
         self.check([
             ("((((1))))", 1),
             ("((2 + 3) * (4 - 1)) ^ 2", 225),
+            ("(" * 150 + "1" + ")" * 150, 1),
         ])
 
 

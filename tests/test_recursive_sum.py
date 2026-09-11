@@ -1,4 +1,5 @@
 """Тесты рекурсивной суммы (Повыш. 9)."""
+import inspect
 import math
 import random
 import sys
@@ -64,6 +65,24 @@ class RecursionDepthTests(unittest.TestCase):
     def test_halving_handles_long_lists(self) -> None:
         numbers = list(range(100_000))
         self.assertEqual(recursive_sum(numbers), sum(numbers))
+
+    def test_halving_depth_is_logarithmic(self) -> None:
+        """Миллиону чисел хватает 30 дополнительных уровней стека.
+
+        Предел рекурсии временно ставится всего на 30 вызовов больше
+        текущей глубины: деление пополам укладывается (нужно около
+        log₂ 1 000 000 ≈ 20 уровней), а линейной рекурсии не хватает
+        даже на 100 чисел.
+        """
+        numbers = list(range(1_000_000))
+        old_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(len(inspect.stack()) + 30)
+        try:
+            self.assertEqual(recursive_sum(numbers), sum(numbers))
+            with self.assertRaises(RecursionError):
+                recursive_sum_linear(numbers[:100])
+        finally:
+            sys.setrecursionlimit(old_limit)
 
 
 class ParseNumbersTests(unittest.TestCase):
