@@ -1,6 +1,7 @@
 """Меню заданий лабораторной работы."""
 from collections.abc import Callable
 
+from structlab import gcd
 from structlab.console import InputFunc, OutputFunc, read_line
 
 TaskRunner = Callable[[InputFunc, OutputFunc], None]
@@ -8,7 +9,9 @@ TaskRunner = Callable[[InputFunc, OutputFunc], None]
 TITLE = "Лабораторная работа №2 «Структурное программирование на Python»"
 
 # Пункты меню: название задания и функция, запускающая его диалог.
-MENU_ITEMS: tuple[tuple[str, TaskRunner], ...] = ()
+MENU_ITEMS: tuple[tuple[str, TaskRunner], ...] = (
+    ("НОД двух чисел", gcd.run),
+)
 
 
 def show_menu(output_func: OutputFunc = print) -> None:
