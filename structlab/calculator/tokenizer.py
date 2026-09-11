@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass
 
 from structlab.calculator.errors import CalcError
+from structlab.formatting import Number
 
 # Виды токенов.
 NUMBER = "число"
@@ -31,8 +32,6 @@ IMAGINARY_UNITS = ("i", "j")
 
 NUMBER_PATTERN = re.compile(r"[0-9]+(?:\.[0-9]*)?|\.[0-9]+")
 NAME_PATTERN = re.compile(r"[A-Za-z]+")
-
-Number = int | float | complex
 
 
 @dataclass(frozen=True)

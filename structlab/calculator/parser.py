@@ -24,11 +24,7 @@
 Значение вычисляется сразу во время разбора, без построения дерева.
 """
 from structlab.calculator.errors import CalcError
-from structlab.calculator.operations import (
-    Number,
-    apply_operator,
-    square_root,
-)
+from structlab.calculator.operations import apply_operator, square_root
 from structlab.calculator.tokenizer import (
     END,
     FUNCTION,
@@ -39,6 +35,7 @@ from structlab.calculator.tokenizer import (
     Token,
     tokenize,
 )
+from structlab.formatting import Number
 
 ADDITIVE = ("+", "-")
 MULTIPLICATIVE = ("*", "/", "//", "%")

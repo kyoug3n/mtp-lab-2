@@ -17,8 +17,7 @@ import cmath
 import math
 
 from structlab.calculator.errors import CalcError
-
-Number = int | float | complex
+from structlab.formatting import Number
 
 # Python по умолчанию отказывается переводить в строку целые числа длиннее
 # 4300 цифр (sys.get_int_max_str_digits()), поэтому калькулятор не допускает
