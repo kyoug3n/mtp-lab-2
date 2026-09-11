@@ -8,7 +8,12 @@
 * заранее отказывается возводить в степень, если результат получится
   длиннее ``MAX_INT_DIGITS`` цифр, — иначе ``9 ^ 9 ^ 9`` вычислялось бы
   очень долго, а напечатать такое число Python всё равно не позволит.
+
+Комплексные числа обрабатываются теми же операторами. Дробная степень
+отрицательного числа, как и в Python, даёт главное значение корня:
+``(-8) ^ (1/3)`` — это ``1+1.73205080757i``, а не ``-2``.
 """
+import cmath
 import math
 
 from structlab.calculator.errors import CalcError
@@ -22,8 +27,9 @@ MAX_INT_DIGITS = 4300
 INT_LIMIT = 10 ** MAX_INT_DIGITS
 
 TOO_BIG_INT = f"Результат слишком велик: больше {MAX_INT_DIGITS} цифр"
-TOO_BIG_FLOAT = "Результат слишком велик для дробного числа (переполнение)"
-NOT_REAL = "Результат не является действительным числом"
+TOO_BIG_FLOAT = "Слишком большое число для дробной арифметики (переполнение)"
+ZERO_POWER = "Ноль нельзя возвести в отрицательную или комплексную степень"
+INTEGER_ONLY = ("//", "%")
 
 
 def apply_operator(
@@ -34,8 +40,16 @@ def apply_operator(
     ``operator`` — одна из операций Python: ``+ - * / // % **``.
     ``position`` указывает место операции во вводе для сообщения об ошибке.
 
-    :raises CalcError: при делении на ноль или слишком большом результате.
+    :raises CalcError: при делении на ноль, слишком большом результате
+        или ``//`` и ``%`` с комплексным числом.
     """
+    if operator in INTEGER_ONLY and (
+        isinstance(left, complex) or isinstance(right, complex)
+    ):
+        raise CalcError(
+            f"Операция «{operator}» не определена для комплексных чисел",
+            position,
+        )
     try:
         if operator == "+":
             result = left + right
@@ -68,10 +82,6 @@ def power(
     Для целых чисел длина результата оценивается заранее: у числа
     ``base ** exponent`` около ``exponent * log10(|base|)`` цифр.
     """
-    if base == 0 and exponent < 0:
-        raise CalcError(
-            "Ноль нельзя возвести в отрицательную степень", position
-        )
     if (
         isinstance(base, int)
         and isinstance(exponent, int)
@@ -80,15 +90,31 @@ def power(
         and exponent * math.log10(abs(base)) >= MAX_INT_DIGITS
     ):
         raise CalcError(TOO_BIG_INT, position)
-    return base ** exponent
+    try:
+        return base ** exponent
+    except ZeroDivisionError:
+        raise CalcError(ZERO_POWER, position) from None
+
+
+def square_root(value: Number, position: int | None = None) -> Number:
+    """Квадратный корень: ``math.sqrt`` для неотрицательных действительных
+    чисел, ``cmath.sqrt`` для отрицательных и комплексных (``sqrt(-4) = 2i``).
+    """
+    try:
+        if isinstance(value, complex) or value < 0:
+            result = cmath.sqrt(value)
+        else:
+            result = math.sqrt(value)
+    except OverflowError:
+        raise CalcError(TOO_BIG_FLOAT, position) from None
+    return check_result(result, position)
 
 
 def check_result(value: Number, position: int | None = None) -> Number:
     """Проверить, что результат можно показать пользователю.
 
-    :raises CalcError: если целое число длиннее ``MAX_INT_DIGITS`` цифр,
-        дробное переполнилось (стало бесконечностью) или результат
-        оказался комплексным.
+    :raises CalcError: если целое число длиннее ``MAX_INT_DIGITS`` цифр
+        или дробное (комплексное) переполнилось — стало бесконечностью.
     """
     if isinstance(value, int):
         if abs(value) >= INT_LIMIT:
@@ -96,7 +122,6 @@ def check_result(value: Number, position: int | None = None) -> Number:
     elif isinstance(value, float):
         if not math.isfinite(value):
             raise CalcError(TOO_BIG_FLOAT, position)
-    else:
-        # Python даёт комплексный результат, например, для (-8) ** 0.5.
-        raise CalcError(NOT_REAL, position)
+    elif not cmath.isfinite(value):
+        raise CalcError(TOO_BIG_FLOAT, position)
     return value

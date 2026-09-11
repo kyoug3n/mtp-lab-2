@@ -1,4 +1,6 @@
 """Тесты вычисления выражений калькулятором (Средн. 6)."""
+import cmath
+import math
 import random
 import time
 import unittest
@@ -6,9 +8,9 @@ import unittest
 from structlab.calculator import CalcError, evaluate
 from structlab.calculator.operations import (
     MAX_INT_DIGITS,
-    NOT_REAL,
     TOO_BIG_FLOAT,
     TOO_BIG_INT,
+    ZERO_POWER,
 )
 
 
@@ -91,6 +93,62 @@ class PrecedenceTests(unittest.TestCase):
         ])
 
 
+class SqrtAndComplexTests(unittest.TestCase):
+    def check(self, cases: list[tuple[str, complex]]) -> None:
+        for expression, expected in cases:
+            with self.subTest(expression=expression):
+                self.assertEqual(evaluate(expression), expected)
+
+    def test_sqrt_forms(self) -> None:
+        for expression in ("sqrt 16", "sqrt16", "sqrt(16)", "SQRT 16"):
+            with self.subTest(expression=expression):
+                self.assertEqual(evaluate(expression), 4.0)
+
+    def test_sqrt_binds_like_a_function_call(self) -> None:
+        self.check([
+            ("sqrt 16 + 9", 13.0),
+            ("sqrt(16 + 9)", 5.0),
+            ("2 * sqrt 9", 6.0),
+            ("-sqrt 4", -2.0),
+            ("sqrt 16 ^ 2", 16.0),
+            ("sqrt sqrt 16", 2.0),
+            ("sqrt(-4) ^ 2", (2j) ** 2),
+        ])
+
+    def test_sqrt_of_negative_and_complex_numbers(self) -> None:
+        self.check([
+            ("sqrt(-4)", 2j),
+            ("sqrt(-2)", cmath.sqrt(-2)),
+            ("sqrt(3 + 4i)", 2 + 1j),
+            ("sqrt(0)", 0.0),
+        ])
+
+    def test_imaginary_unit(self) -> None:
+        self.check([
+            ("i * i", -1 + 0j),
+            ("i ^ 2", -1 + 0j),
+            ("4i", 4j),
+            ("3 + 4i", 3 + 4j),
+            ("2.5j", 2.5j),
+        ])
+
+    def test_complex_arithmetic_matches_python(self) -> None:
+        self.check([
+            ("(1 + 2i) * (3 - i)", (1 + 2j) * (3 - 1j)),
+            ("(1 + 2i) / (3 - 4i)", (1 + 2j) / (3 - 4j)),
+            ("(1 + i) ^ 8", (1 + 1j) ** 8),
+            ("2 ^ i", 2 ** 1j),
+            ("-(3 - 4i)", -(3 - 4j)),
+        ])
+
+    def test_fractional_power_of_negative_number(self) -> None:
+        # Главное значение корня, как в Python, а не -2.
+        result = evaluate("(-8) ^ (1/3)")
+        self.assertEqual(result, (-8) ** (1 / 3))
+        self.assertTrue(cmath.isclose(result, 1 + math.sqrt(3) * 1j))
+        self.assertEqual(evaluate("(-8) ^ 0.5"), (-8) ** 0.5)
+
+
 class ErrorTests(unittest.TestCase):
     def check_error(
         self, expression: str, message: str, position: int | None
@@ -123,9 +181,30 @@ class ErrorTests(unittest.TestCase):
         for expression, position in cases:
             self.check_error(expression, "Деление на ноль", position)
 
-    def test_zero_to_negative_power(self) -> None:
+    def test_zero_to_negative_or_complex_power(self) -> None:
+        self.check_error("0 ^ -1", ZERO_POWER, 2)
+        self.check_error("0.0 ^ -2", ZERO_POWER, 4)
+        self.check_error("0 ^ i", ZERO_POWER, 2)
+
+    def test_integer_operations_with_complex_numbers(self) -> None:
         self.check_error(
-            "0 ^ -1", "Ноль нельзя возвести в отрицательную степень", 2
+            "(1 + i) // 2",
+            "Операция «//» не определена для комплексных чисел", 8,
+        )
+        self.check_error(
+            "5 % 2i", "Операция «%» не определена для комплексных чисел", 2
+        )
+
+    def test_sqrt_errors(self) -> None:
+        self.check_error(
+            "sqrt", "Ожидалось число или «(», а встретилось конец выражения", 4
+        )
+        self.check_error(
+            "sqrt -4", "Ожидалось число или «(», а встретилось «-»", 5
+        )
+        self.check_error("sqrt(10 ^ 400)", TOO_BIG_FLOAT, 0)
+        self.check_error(
+            "2 sqrt 4", "Ожидалась операция, а встретилось «sqrt»", 2
         )
 
     def test_huge_integer_powers_are_refused_quickly(self) -> None:
@@ -145,44 +224,77 @@ class ErrorTests(unittest.TestCase):
         self.check_error("10.0 ^ 400", TOO_BIG_FLOAT, 5)
         self.check_error("10.0 ^ 300 * 10.0 ^ 300", TOO_BIG_FLOAT, 11)
         self.check_error("10 ^ 400 / 3", TOO_BIG_FLOAT, 9)
+        self.check_error("(1 + i) ^ 100000", TOO_BIG_FLOAT, 8)
 
-    def test_complex_results_are_refused(self) -> None:
-        self.check_error("(-8) ^ 0.5", NOT_REAL, 5)
+    def test_exponent_notation_is_not_supported(self) -> None:
+        self.check_error("1e5", "Неизвестное имя «e»", 1)
 
     def test_too_deep_nesting(self) -> None:
         self.check_error("(" * 5000 + "1" + ")" * 5000,
                          "Слишком глубокая вложенность выражения", None)
 
 
-def random_number(rng: random.Random) -> str:
-    """Случайное целое или дробное число в записи калькулятора."""
-    if rng.random() < 0.7:
-        return str(rng.randint(0, 20))
-    return f"{rng.randint(0, 20)}.{rng.randint(0, 9)}"
+def random_number(rng: random.Random) -> tuple[str, str]:
+    """Случайное число: запись для калькулятора и для Python."""
+    kind = rng.random()
+    if kind < 0.6:
+        text = str(rng.randint(0, 20))
+        return text, text
+    if kind < 0.85:
+        text = f"{rng.randint(0, 20)}.{rng.randint(0, 9)}"
+        return text, text
+    if kind < 0.95:
+        coefficient = str(rng.randint(1, 9))
+        return coefficient + "i", coefficient + "j"
+    return "i", "1j"
 
 
-def random_expression(rng: random.Random, depth: int) -> str:
-    """Случайное выражение со всеми операциями, скобками и знаками.
+def random_expression(rng: random.Random, depth: int) -> tuple[str, str]:
+    """Случайное выражение: запись для калькулятора и для Python.
 
-    Показатели степени — небольшие целые, чтобы числа не росли слишком
-    сильно; пробелы между токенами ставятся или не ставятся случайно.
+    В выражении встречаются все операции, скобки, знаки, ``sqrt`` и мнимые
+    числа. Показатели степени — небольшие целые или 0.5, чтобы числа не
+    росли слишком сильно; пробелы между токенами ставятся случайно.
     """
     if depth == 0 or rng.random() < 0.2:
         return random_number(rng)
     space = rng.choice(["", " "])
     kind = rng.random()
-    if kind < 0.6:
+    if kind < 0.55:
         operator = rng.choice(["+", "-", "*", "/", "//", "%", "^", "**"])
-        left = random_expression(rng, depth - 1)
+        left, python_left = random_expression(rng, depth - 1)
         if operator in ("^", "**"):
-            right = str(rng.randint(-3, 3))
+            right = python_right = rng.choice(["-3", "-1", "0", "1", "2",
+                                               "3", "0.5"])
+            python_operator = "**"
         else:
-            right = random_expression(rng, depth - 1)
-        return f"{left}{space}{operator}{space}{right}"
+            right, python_right = random_expression(rng, depth - 1)
+            python_operator = operator
+        return (f"{left}{space}{operator}{space}{right}",
+                f"{python_left} {python_operator} {python_right}")
+    inner, python_inner = random_expression(rng, depth - 1)
+    if kind < 0.75:
+        return f"({space}{inner}{space})", f"({python_inner})"
     if kind < 0.85:
-        return f"({space}{random_expression(rng, depth - 1)}{space})"
+        return f"sqrt{space}({inner})", f"_sqrt({python_inner})"
     sign = rng.choice(["-", "+"])
-    return f"{sign}{space}{random_expression(rng, depth - 1)}"
+    return f"{sign}{space}{inner}", f"{sign}{python_inner}"
+
+
+def reference_sqrt(value: complex) -> complex:
+    """Корень для проверочного выражения на Python (как в калькуляторе).
+
+    Сам корень проверяется в :class:`SqrtAndComplexTests`; здесь важно, что
+    ``sqrt`` в выражении применяется к нужному операнду.
+    """
+    if isinstance(value, complex) or value < 0:
+        return cmath.sqrt(value)
+    return math.sqrt(value)
+
+
+def is_finite(value: complex) -> bool:
+    """Конечно ли число (для любого из типов int, float, complex)."""
+    return isinstance(value, int) or cmath.isfinite(value)
 
 
 class MatchesPythonTests(unittest.TestCase):
@@ -198,16 +310,12 @@ class MatchesPythonTests(unittest.TestCase):
         rng = random.Random(4)
         checked = errors = 0
         for _ in range(3000):
-            expression = random_expression(rng, depth=4)
-            python_expression = expression.replace("^", "**")
+            expression, python_expression = random_expression(rng, depth=4)
             try:
-                expected = eval(python_expression)
-            except (ZeroDivisionError, OverflowError):
-                with self.assertRaises(CalcError, msg=expression):
-                    evaluate(expression)
-                errors += 1
-                continue
-            if isinstance(expected, complex):
+                expected = eval(python_expression, {"_sqrt": reference_sqrt})
+            except (ZeroDivisionError, OverflowError, TypeError):
+                expected = None  # Python не смог вычислить выражение
+            if expected is None or not is_finite(expected):
                 with self.assertRaises(CalcError, msg=expression):
                     evaluate(expression)
                 errors += 1

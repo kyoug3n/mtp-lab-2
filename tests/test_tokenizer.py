@@ -4,6 +4,7 @@ import unittest
 from structlab.calculator.errors import CalcError
 from structlab.calculator.tokenizer import (
     END,
+    FUNCTION,
     LEFT_PAREN,
     NUMBER,
     OPERATOR,
@@ -49,6 +50,34 @@ class TokenizeTests(unittest.TestCase):
         )
         positions = [token.position for token in tokens]
         self.assertEqual(positions, [0, 1, 3, 5, 6, 7])
+
+    def test_imaginary_numbers(self) -> None:
+        tokens = tokenize("4i + 2.5j + i + J")
+        values = [token.value for token in tokens if token.kind == NUMBER]
+        self.assertEqual(values, [4j, 2.5j, 1j, 1j])
+        self.assertEqual(texts("4i+i"), ["4i", "+", "i"])
+
+    def test_sqrt_in_any_case(self) -> None:
+        for expression in ("sqrt 16", "sqrt16", "SQRT(16)", "Sqrt 16"):
+            with self.subTest(expression=expression):
+                self.assertEqual(tokenize(expression)[0].kind, FUNCTION)
+
+    def test_function_name_after_number_is_separate_token(self) -> None:
+        self.assertEqual(texts("2sqrt 4"), ["2", "sqrt", "4"])
+
+    def test_unknown_names(self) -> None:
+        for expression, name, position in (
+            ("2 + x", "x", 4),
+            ("sin(1)", "sin", 0),
+            ("2ii", "ii", 1),
+        ):
+            with self.subTest(expression=expression):
+                with self.assertRaises(CalcError) as caught:
+                    tokenize(expression)
+                self.assertEqual(
+                    caught.exception.message, f"Неизвестное имя «{name}»"
+                )
+                self.assertEqual(caught.exception.position, position)
 
     def test_empty_expression(self) -> None:
         tokens = tokenize("   ")
