@@ -120,7 +120,11 @@ def git_revision() -> str:
 
 
 def build_sessions() -> list[str]:
-    """Выполнить все сессии и вернуть их протокол построчно."""
+    """Выполнить все сессии и вернуть их протокол построчно.
+
+    Каждая сессия начинается с пустой строки — по первой пустой строке
+    протокол делится на штамп и сессии.
+    """
     lines: list[str] = []
     for number, (title, session, user_input) in enumerate(SESSIONS, 1):
         console = ScriptedConsole(user_input)
@@ -130,7 +134,7 @@ def build_sessions() -> list[str]:
 
 
 def build_header() -> list[str]:
-    """Штамп протокола: команда, ревизия и версия Python."""
+    """Штамп протокола: команда, ревизия и версия Python (без пустых строк)."""
     return [
         "Демонстрационные сессии лабораторной работы №2 (вариант 4)",
         "Команда: python -m structlab.demo reports/demo.txt",

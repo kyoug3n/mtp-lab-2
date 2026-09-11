@@ -2,7 +2,7 @@
 import unittest
 from pathlib import Path
 
-from structlab.demo import SESSIONS, build_header, build_sessions
+from structlab.demo import SESSIONS, build_sessions
 
 REPORT = Path(__file__).resolve().parent.parent / "reports" / "demo.txt"
 
@@ -16,11 +16,13 @@ class DemoTests(unittest.TestCase):
     def test_committed_report_is_up_to_date(self) -> None:
         """Протокол в репозитории совпадает со свежим прогоном сессий.
 
-        Штамп (первые строки с ревизией и версией Python) не сравнивается:
-        он описывает, где и когда протокол был получен.
+        Штамп в начале файла (команда, ревизия, версия Python) не
+        сравнивается: он описывает, где и когда протокол был получен.
+        Штамп отделён от сессий первой пустой строкой, поэтому для сверки
+        не нужен ни git, ни повторное построение штампа.
         """
         committed = REPORT.read_text(encoding="utf-8").splitlines()
-        sessions = committed[len(build_header()):]
+        sessions = committed[committed.index(""):]
         self.assertEqual(
             sessions,
             build_sessions(),
