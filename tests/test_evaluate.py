@@ -168,14 +168,28 @@ class ErrorTests(unittest.TestCase):
         self.check_error(
             "* 2", "Ожидалось число или «(», а встретилось «*»", 0
         )
-        self.check_error("2 3", "Ожидалась операция, а встретилось «3»", 2)
         self.check_error("(2 + 3", "Скобка не закрыта", 0)
         self.check_error("2 + 3)", "Лишняя закрывающая скобка", 5)
-        self.check_error(
-            "(2 3)", "Ожидалась операция или «)», а встретилось «3»", 3
-        )
         self.check_error("()", "Ожидалось число или «(», а встретилось «)»", 1)
         self.check_error("2 $ 3", "Неизвестный символ «$»", 2)
+
+    def test_missing_operator(self) -> None:
+        # Умножение не подразумевается: знак операции нужно указать явно.
+        cases = [
+            ("2 3", "«3»", 2),
+            ("2sqrt 4", "«sqrt»", 1),
+            ("2 sqrt 4", "«sqrt»", 2),
+            ("2(3)", "«(»", 1),
+            ("(1 + 2)(3)", "«(»", 7),
+            ("(2 3)", "«3»", 3),
+            ("4i i", "«i»", 3),
+        ]
+        for expression, token, position in cases:
+            self.check_error(
+                expression,
+                f"Пропущен знак операции перед {token} (например, «*»)",
+                position,
+            )
 
     def test_division_by_zero(self) -> None:
         cases = [("1 / 0", 2), ("5 // 0", 2), ("5 % 0", 2), ("1.5 / 0.0", 4)]
@@ -204,9 +218,6 @@ class ErrorTests(unittest.TestCase):
             "sqrt -4", "Ожидалось число или «(», а встретилось «-»", 5
         )
         self.check_error("sqrt(10 ^ 400)", TOO_BIG_FLOAT, 0)
-        self.check_error(
-            "2 sqrt 4", "Ожидалась операция, а встретилось «sqrt»", 2
-        )
 
     def test_huge_integer_powers_are_refused_quickly(self) -> None:
         started = time.perf_counter()

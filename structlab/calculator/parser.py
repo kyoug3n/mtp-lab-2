@@ -73,10 +73,9 @@ class _Parser:
         if token.kind == RIGHT_PAREN:
             raise CalcError("Лишняя закрывающая скобка", token.position)
         if token.kind != END:
-            raise CalcError(
-                f"Ожидалась операция, а встретилось {_describe(token)}",
-                token.position,
-            )
+            # Операции поглощаются циклами разбора, поэтому здесь может
+            # оказаться только начало нового операнда: число, sqrt или «(».
+            raise _missing_operator(token)
         return value
 
     def _peek(self) -> Token:
@@ -149,15 +148,23 @@ class _Parser:
                 return value
             if closing.kind == END:
                 raise CalcError("Скобка не закрыта", token.position)
-            raise CalcError(
-                f"Ожидалась операция или «)», а встретилось "
-                f"{_describe(closing)}",
-                closing.position,
-            )
+            raise _missing_operator(closing)
         raise CalcError(
             f"Ожидалось число или «(», а встретилось {_describe(token)}",
             token.position,
         )
+
+
+def _missing_operator(token: Token) -> CalcError:
+    """Ошибка для операнда, записанного сразу после другого операнда.
+
+    Например, ``2 3``, ``2sqrt 4`` или ``2(3)``: калькулятор не
+    подразумевает умножение, знак операции нужно указать явно.
+    """
+    return CalcError(
+        f"Пропущен знак операции перед {_describe(token)} (например, «*»)",
+        token.position,
+    )
 
 
 def _describe(token: Token) -> str:
